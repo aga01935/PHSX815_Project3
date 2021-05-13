@@ -26,6 +26,8 @@ if __name__ == "__main__":
     Nexp = 1
     Nmeas = 1
     seed = 5555
+    fname = "file.txt"
+    fname2 = "tfile.txt"
     print (sys.argv[0])
 
     if '-npar' in sys.argv:
@@ -44,6 +46,14 @@ if __name__ == "__main__":
         Ne = int(sys.argv[p+1])
         if Ne > 0:
             Nexp = Ne
+    if '-output' in sys.argv:
+        p = sys.argv.index('-output')
+        Ne = sys.argv[p+1]
+        fname = Ne
+        fname2 = "t"+ Ne
+
+
+
 
 
     if '-h' in sys.argv or '--help' in sys.argv:
@@ -68,12 +78,16 @@ if __name__ == "__main__":
     diff_temp = []
     random = Random(seed)
     print (npar,Nmeas,Nexp,seed)
+    OutputFileName1 = fname
+    OutputFileName2 = fname2
+    outfile1 = open(OutputFileName1, 'w')
+    outfile2 = open(OutputFileName2, 'w')
     for g in range(1,npar+1):
 
         #temp = random.exponential(0.02)/10.
         temp = float(g)/100.
 
-        #print (temp)
+        #print (temp)''
 
         for e in range(0,Nexp):
             #exptemp = []
@@ -159,7 +173,12 @@ if __name__ == "__main__":
 
             calculated_temp.append(c_temp)
             true_temp.append(temp)
+            outfile1.write(str(c_temp)+" ")
+            outfile2.write(str(temp)+" ")
+
             diff_temp.append((temp-c_temp))
+    outfile1.close()
+    outfile2.close()
             #print (temp, c_temp[0],(temp-c_temp[0]))
     #print(true_temp)
     #print (calculated_temp)
@@ -168,7 +187,7 @@ if __name__ == "__main__":
     #scale = (max(true_temp)-min(true_temp))/(max(calculated_temp)-min(calculated_temp))
     #calculated_temp = [x*scale for x in calculated_temp]
 
-    h = plt.hist2d(true_temp,calculated_temp,bins = 10,norm = LogNorm())
+    """h = plt.hist2d(true_temp,calculated_temp,bins = 10,norm = LogNorm())
     plt.colorbar(h[3])
     #plt.figure()
     plt.xlabel("True Temperature")
@@ -205,4 +224,4 @@ if __name__ == "__main__":
     canvas = rt.TCanvas("canvas","",600,600)
     canvas.cd()
     hist.Draw("e")
-    canvas.SaveAs("result.pdf")
+    canvas.SaveAs("result.pdf")"""
