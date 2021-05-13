@@ -1,8 +1,5 @@
 # PHSX815_Project3
 ## Electricity Use Analysis in my apartment.
-This is just the codes from project 2 and week 8 of the homework. My goal is to generate the experiment for different value of the temperature.  \n 
-Which is passed as the parameter for the parabolic distribution of the electricity consumption. Then I will calculate the temperature from the \n
-simulated experiment and run the Neyman construction to compare the true value and the experimental value. Then I will use minimizer function to find the \n
-value of the temperature for which the likelihood will be maximum.
--This is my goal for now. However this plan might change. 
-
+In this experiment we simulated the electricity consumption using parabolic distribution for given difference in outside temperature and the temperature set on thermostat.
+The main code is in the folder python. Which is named as ElectricityUse.py.
+We can simulate the code using python3 ElectricityUse.py -npar <number of paramters> -Nexp <number of experiments> -Nmeas <number of measurements> -seed <seed for random numbers>. This code also utilize the Random.py to simulate random parabolic distribution for the range of x value and provided temperature as parameter.
