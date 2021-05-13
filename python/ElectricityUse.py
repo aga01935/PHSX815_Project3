@@ -2,181 +2,207 @@
 
 # imports of external packages to use in our code
 import sys
-import math
+#import math
 import numpy as np
+import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
+from scipy.stats import norm
+from matplotlib.colors import LogNorm
+import ROOT as rt
 
-# import our Random class from python/Random.py file
+#
+from scipy.optimize import curve_fit
 sys.path.append(".")
 from Random import Random
 from MySort import MySort
-
-# main function for our coin toss Python code
+plt.rcParams['axes.facecolor'] = 'white'
 if __name__ == "__main__":
-    # default single coin-toss probability for hypothesis 0
-    p0 = 0.5
-
-
-    # default single coin-toss probability for hypothesis 1
-    p1 = 0.9
+    def parabola(par,x):
+        value = (par[0])*x*x
+        return value
+    def exponential(par,x):
+        val = (1./float(par[0])) * math.exp(-float(x)/float(par[0]))
+    npar = 1
+    Nexp = 1
+    Nmeas = 1
+    seed = 5555
     print (sys.argv[0])
 
-    haveH0 = False
-    haveH1 = False
+    if '-npar' in sys.argv:
+        p = sys.argv.index('-npar')
+        npar = int(sys.argv[p+1])
+    if '-seed' in sys.argv:
+        p = sys.argv.index('-seed')
+        seed = sys.argv[p+1]
+    if '-Nmeas' in sys.argv:
+        p = sys.argv.index('-Nmeas')
+        Nt = int(sys.argv[p+1])
+        if Nt > 0:
+            Nmeas = Nt
+    if '-Nexp' in sys.argv:
+        p = sys.argv.index('-Nexp')
+        Ne = int(sys.argv[p+1])
+        if Ne > 0:
+            Nexp = Ne
 
-    if '-input0' in sys.argv:
-        p = sys.argv.index('-input0')
-        InputFile0 = sys.argv[p+1]
-        haveH0 = True
-    if '-input1' in sys.argv:
-        p = sys.argv.index('-input1')
-        InputFile1 = sys.argv[p+1]
-        haveH1 = True
 
-    if '-h' in sys.argv or '--help' in sys.argv or not haveH0:
+    if '-h' in sys.argv or '--help' in sys.argv:
         print ("Usage: %s [options]" % sys.argv[0])
         print ("  options:")
         print ("options:")
-        print ("-input0 <string>       name of Simulated H0 Hypothesis ASCII data")
-        print ("-input1 <string>       name of Simulated H1 Hypothesis ASCII data")
+        print ("-seed <number >        provide any four digit seed for random number, default is 5555" )
+        print ("-npar <integer>        number of true parameter to be generated, default is 100")
+        print ("-Nmes <number>         number of measurements to make, default is 1")
+        print ("-Nexp <number>         number of experiment to perform, default is 1")
+        print ("-output <string>       name of output file to produce, default is 1")
+
         print
         sys.exit(1)
-    Troom = 30
-    Ntoss = 1
-    Npass0 = []
-    LogLikeRatio0 = []
-    Npass1 = []
-    LogLikeRatio1 = []
-    #first_line= []
-    Npass_min = 1e8
-    Npass_max = -1e8
-    LLR_min = 1e8
-    LLR_max = -1e8
+    Meas_Param = []
+    Data = []
     sorter = MySort()
-    x0 = []
-    x1 = []
-    x0_avg = []
-    x1_avg = []
 
-    with open(InputFile0) as ifile:
-        first_line1 =ifile.readline().strip()
-        cause1 = first_line1[0] + first_line1[1]
-        #print(first_line[3])
-        temp = float(first_line1[2]+first_line1[3])
-        abs_temp = abs(Troom-temp)
-        next(ifile)
-        for line in ifile:
-            #print (line)
-            lineVals = line.split()
-            #print (lineVals)
-            Ntoss = len(lineVals)
-            Npass = 0
-            LLR = 0
-            tempavg =0.
-            for v in lineVals:
-                # adding LLR for this toss
-                #if float(v) >= 1:
-                x0.append(float(v))
-                tempavg += float(v)
-                LLR += math.log( (abs_temp * float(v)**2)/( abs_temp * float(v) ) )
-            tempavg = tempavg/Ntoss
-            x0_avg.append(tempavg)
-                #else:
-                #    LLR += math.log( (1.-p1)/(1.-p0) )
+# simulating the experiment:
+    true_temp =[]
+    calculated_temp =[]
+    diff_temp = []
+    random = Random(seed)
+    print (npar,Nmeas,Nexp,seed)
+    for g in range(1,npar+1):
 
-            if Npass < Npass_min:
-                Npass_min = Npass
-            if Npass > Npass_max:
-                Npass_max = Npass
-            if LLR < LLR_min:
-                LLR_min = LLR
-            if LLR > LLR_max:
-                LLR_max = LLR
-            Npass0.append(Npass)
-            LogLikeRatio0.append(LLR)
+        #temp = random.exponential(0.02)/10.
+        temp = float(g)/100.
 
-    if haveH1:
-        with open(InputFile1) as ifile:
-            first_line2 =ifile.readline().strip()
-            cause2 = first_line2[0] + first_line2[1]
-            #print(first_line[0],first_line[1],first_line[1])
-            temp = float(first_line2[2]+first_line2[3])
-            abs_temp = abs(Troom-temp)
-            next(ifile)
-            for line in ifile:
-                lineVals = line.split()
-                Ntoss = len(lineVals)
-                Npass = 0
-                LLR = 0
-                tempavg = 0
-                for v in lineVals:
-                    Npass += float(v);
-                    # adding LLR for this toss
-                    #if float(v) >= 1:
-                    x1.append(float(v))
-                    tempavg += float(v)
-                    LLR += math.log(( abs_temp * float(v) )/(abs_temp * float(v)**2))
-                tempavg = tempavg/Ntoss
-                x1_avg.append(tempavg)
-                    #else:
-                    #    LLR += math.log( (1.-p1)/(1.-p0) )
+        #print (temp)
 
-                if Npass < Npass_min:
-                    Npass_min = Npass
-                if Npass > Npass_max:
-                    Npass_max = Npass
-                if LLR < LLR_min:
-                    LLR_min = LLR
-                if LLR > LLR_max:
-                    LLR_max = LLR
-                Npass1.append(Npass)
-                LogLikeRatio1.append(LLR)
-    x0 = sorter.DefaultSort(x0)
-    x1= sorter.DefaultSort(x1)
-    x0_avg = sorter.DefaultSort(x0_avg)
-    x1_avg = sorter.DefaultSort(x1_avg)
-    title = str(Ntoss) +  " Trial / experiment"
-    wt1 = np.ones_like(x0) /len(x0)
-    #print (x0)
-    plt.figure()
-    plt.hist(x0, Ntoss+1,density=True,facecolor="g",alpha=0.5,label="assuming " + cause1)
-    plt.hist(x1, Ntoss+1,density=True,facecolor="b",alpha=0.5,label="assuming " + cause2)
-    plt.xlabel('x')
-    plt.ylabel('Probability/bin')
-    plt.title(title)
+        for e in range(0,Nexp):
+            #exptemp = []
+            dataval =[]
+            #ydata =[]
+            #xdata =[]
+            for t in range(0,Nmeas):
+                val = random.parabolic_dist(temp,1.,10.)
+                #np.random.exponential(temp)
+                #random.parabolic_dist(temp,1.,10.)
+                #true_temp.append(temp)
+                dataval.append(val)
+                #exptemp.append(temp)
 
-    plt.legend()
-    plt.grid(True)
+            y,x = np.histogram(dataval,density = True,bins =100)
+            """
+            plt.figure()
+            plt.hist(dataval,alpha =1, density =True)
+            plt.title("Simulated Distribution for "+ str(Nmeas) + " Measurements/Experiments")
+            plt.xlabel("Time between the measurements")
+            plt.ylabel("Probability")
+            plt.show()
+
+            """
+
+
+            ydata = list(y)
+            xdata =list(x[:-1])
+
+            #print (xdata[0],ydata[0])
+            #c_temp, pcov = curve_fit(parabola, xdata[:-1], ydata, p0=1)
+
+            #c_temp, pcov = curve_fit(exponential, xdata[:-1], ydata, p0=1.)
+            #c_temp = round(c_temp[0],4)
+
+            #calc_y =[]
+            calc_temp =[]
+            #x_plotter = np.arange(1,10,0.001)
+            #print ("length of xdata is ",len(xdata))
+
+            for i in range(0,len(xdata)):
+                tcal = float(ydata[i])/float((xdata[i]*xdata[i]))
+                calc_temp.append(tcal)
+            #    calc_y.append(tcal/100.)
+
+            #c_temp = sum(calc_temp)/len(calc_temp)
+            yt,xt = np.histogram(calc_temp,bins = 20,density = True)
+            #print (xt)
+            #print (yt)
+            xt = list(xt[:-1])
+            yt = list(yt)
+            #xt = xt.sort()
+            #print (xt)
+            #print(yt)
+
+
+
+            #c_temp2 = max(calc_temp, key=calc_temp.count)
+
+            it = 0
+            for it in range(len(yt)):
+
+
+                if (np.isclose(yt[it], max(yt),atol = 0.001)):
+                    #print (yt[it], max(yt), xt[it],it)
+                    c_temp = xt[it]
+            #print ("calculated temp ", c_temp, c_temp2)
+            """plt.figure()
+            plt.hist(calc_temp,bins = 20, density = True )
+            plt.title("Calculate Temperature "+ str(Nexp)+ " Experiments/Paramter")
+            plt.axvline(c_temp, label = "Maximum Likelihood", color = "r")
+            plt.xlabel("Measured Temperature")
+            plt.ylabel("Likelihood")
+            plt.legend()
+            plt.show()"""
+            #plt.scatter(x_plotter,calc_y,color = "g", alpha =0.2)
+            #print(calc_t)
+            #plt.figure()
+            #plt.scatter(xdata,ydata,color ="r")
+            #plt.figure()
+            #plt.hist(dataval,alpha =0.3,density = True)
+            #plt.show()
+
+            calculated_temp.append(c_temp)
+            true_temp.append(temp)
+            diff_temp.append((temp-c_temp))
+            #print (temp, c_temp[0],(temp-c_temp[0]))
+    #print(true_temp)
+    #print (calculated_temp)
+    #plt.figure()
+    #print (max(calculated_temp),min(calculated_temp))
+    #scale = (max(true_temp)-min(true_temp))/(max(calculated_temp)-min(calculated_temp))
+    #calculated_temp = [x*scale for x in calculated_temp]
+
+    h = plt.hist2d(true_temp,calculated_temp,bins = 10,norm = LogNorm())
+    plt.colorbar(h[3])
+    #plt.figure()
+    plt.xlabel("True Temperature")
+    plt.ylabel("Measured Temperature")
+    plt.title("Neyman Construction for "+ str(Nexp) + " Experiments/Parameter")
     plt.show()
+    #n,xbin, patches = plt.hist(slice_diff,density =True ,bins =20)
+    #
+    sigmalist =[]
+    print (len(diff_temp))
+    for iterate in range(0,npar):
+        Nslicelow = iterate*Nexp
+        NsliceHigh = (iterate+1)*Nexp
 
-    wt2 = np.ones_like(x0_avg) /len(x0_avg)
+        slice_diff = diff_temp[Nslicelow:NsliceHigh]
 
-    # make Npass figure
-    plt.figure()
-    plt.hist(x0_avg,weights = wt2, density=True, facecolor='g', alpha=0.5, label="assuming " + cause1)
-    if haveH1:
-        plt.hist(x1_avg,weights = wt2, density=True, facecolor='b', alpha=0.5, label="assuming " + cause2)
-        plt.legend()
+        n,xbin,_ = plt.hist(slice_diff,density =True ,bins =20)
 
-    plt.xlabel('Average')
-    plt.ylabel('Probability')
-    plt.title(title)
-    plt.grid(True)
-
-    plt.show()
-
-    # make LLR figure
-    LogLikeRatio0 = sorter.DefaultSort(LogLikeRatio0)
-    LogLikeRatio1 = sorter.DefaultSort(LogLikeRatio1)
-    plt.figure()
-    plt.hist(LogLikeRatio0, Ntoss+1, density=True, facecolor='g', alpha=0.5,label="assuming "+ cause1)
-    if haveH1:
-        plt.hist(LogLikeRatio1, Ntoss+1, density=True, facecolor='b', alpha=0.7, label="assuming "+ cause2)
-        plt.legend()
-
-    plt.xlabel('$\\lambda = \\log({\\cal L}_{\\mathbb{H}_{1}}/{\\cal L}_{\\mathbb{H}_{0}})$')
-    plt.ylabel('Probability')
-    plt.title(title)
-    plt.grid(True)
-
-    plt.show()
+        mu,sigma = norm.fit(slice_diff)
+        y = norm.pdf( xbin, mu, sigma)
+        plt.plot(xbin, y, 'r--',  linewidth=2)
+        #plt.show()
+        sigmalist.append(sigma)
+        print(Nslicelow,NsliceHigh, sigma)
+    #print (sigmalist)
+    rt.gStyle.SetOptStat(0)
+    hist = rt.TH1D("histo", "Error in Parameter Estimation "+ str(Nexp)+ " Experiment Per Parameters",npar,min(true_temp),max(true_temp))
+    for int in range(1,npar+1):
+        true_temp = float(int)/100.
+        hist.Fill(true_temp)
+        print(true_temp)
+        hist.SetBinError(int-1,sigmalist[int-1])
+        print(sigmalist[int-1])
+    canvas = rt.TCanvas("canvas","",600,600)
+    canvas.cd()
+    hist.Draw("e")
+    canvas.SaveAs("result.pdf")

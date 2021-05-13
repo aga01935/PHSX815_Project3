@@ -8,6 +8,7 @@ import numpy as np
 #################
 # class that can generate random numbers
 class Random:
+
     """A random number generator class"""
 
     # initialization method for Random class
@@ -53,55 +54,71 @@ class Random:
             #print (Inti)
         return int(Inti)
 
-    def exponintial(self,beta =0.5):
+    def exponential(self,beta =0.05):
         if beta <=0.:
             beta = 1.
-        temp = -100.
-        while temp<-40 or temp>100:
+        temp_min = 1.
+        temp_max = 40.
+        #limiting my exponential function to generate the numbers in the range
+        #fast version
+        R = np.exp(-temp_max*beta) + (np.exp(-temp_min*beta)-np.exp(-temp_max*beta)) *self.rand()
+        #print ("random is ",R)
+        #limiting in range slow version
+        temp = -math.log(R)/beta
+        #print ("temperature is ",temp)
+        """temp = -temp_max.
+        while temp<-temp_min or temp>temp_max:
             R = self.rand()
             while R<=0:
                 R = self.rand()
-            temp = -math.log(R)/beta
+            temp = -math.log(R)/beta"""
         return temp
 
 
-    def parabolic_dist(self,temp=30.):
-        room_temp = 30
-        low_temp = -40.0
-        high_temp= 100.
-
-        if temp < -40.:
-            print("temperature is too low  \n changing the  value of a to  %f " % low_temp )
-        if temp > 100.:
-            print("temperature is too low  \n changing the  value of a to  %f " % high_temp )
-            temp = low_temp
-        change_temp = abs(temp-room_temp)
-        Myrand = float(self.rand())
-        #Myrand = self.myrandint(1,10)
-        while Myrand <= 0.:
-            Myrand = float(self.rand())
-            #Myrand = self.myrandint(1,10)
-            #hisrand = float(self.rand())
-
-        X= np.sqrt(Myrand/change_temp)
-        #print (X)
+        #print ("temperature is ",temp)
+        """temp = -temp_max.
+        while temp<-temp_min or temp>temp_max:
+            R = self.rand()
+            while R<=0:
+                R = self.rand()
+            temp = -math.log(R)/beta"""
         return X
 
-    def linear_dist(self,temp=30.):
-        room_temp = 30
-        low_temp = -40.0
-        high_temp= 100.
 
-        if temp < -40.:
-            print("temperature is too low  \n changing the  value of a to  %f " % low_temp )
-        if temp > 100.:
-            print("temperature is too low  \n changing the  value of a to  %f " % high_temp )
+
+    def parabolic_dist(self,temp=30.,rate_min = 1. , rate_max = 20.):
+        #room_temp = 30.
+        low_temp = 0.0001
+        high_temp= 200.
+        if temp < low_temp:
+            print("temperature is too low  \n changing the  value of a to  %f " % low_temp)
             temp = low_temp
-        change_temp = abs(temp-room_temp)
-        NewRand = float(self.rand())
-        #NewRand = self.myrandint(1,10)
-        while NewRand<=0.:
-            NewRand=float(self.rand())
-            #NewRand = self.myrandint(1,10)
-        y = float(NewRand/change_temp)
-        return y
+
+        if temp > high_temp :
+            print("temperature is too low  \n changing the  value of a to  %f " % high_temp )
+            #temp = high_temp
+        change_temp = temp #abs(temp-room_temp)
+        Myrand = self.rand()
+        scaler = (1./3.)*rate_min**3
+        X= np.cbrt(3*(Myrand)/change_temp)
+        #y_max = temp*rate_max**2
+        #yrand = y_max *self.rand()
+
+
+        """x = rate_min + (rate_max-rate_min)*self.rand()
+        y_true = temp*x*x
+        R = y_max/y_true
+        newrand = self.rand()
+        while newrand>R:
+            newrand =self.rand()"""
+
+        #R =  self.rand()
+        #while R > prob:
+        #    R = self.rand()
+
+
+        while X<rate_min or X>rate_max:
+            Myrand = self.rand()
+            X= np.cbrt(3*(Myrand)/change_temp)
+        #print (X)
+        return X
